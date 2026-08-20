@@ -26,7 +26,7 @@ export async function getAreasForLocation(
   return data ?? [];
 }
 
-/** All active areas across the org, each with its location name -- used to populate
+/** All active areas across the org, each with its location name — used to populate
  *  the Asset Register's area filter and the asset form's dependent selects. */
 export async function getAllAreas(
   supabase: SupabaseClient<Database>
