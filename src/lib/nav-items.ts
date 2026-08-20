@@ -3,7 +3,7 @@ export type NavItem = {
   href: string;
 };
 
-export const NAV_ITEMS: NavItem[] = [
+export const NAV_ITEMS: readonly NavItem[] = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Work Orders", href: "/work-orders" },
   { label: "Assets", href: "/assets" },

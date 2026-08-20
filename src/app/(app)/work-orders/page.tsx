@@ -1,5 +1,10 @@
 import { PlaceholderPage } from "@/components/shared/placeholder-page";
 
 export default function WorkOrdersPage() {
-  return <PlaceholderPage title="Work Orders" description="Work order list and creation flow — Phase 3." />;
+  return (
+    <PlaceholderPage
+      title="Work Orders"
+      description="This module will be available in a future implementation phase."
+    />
+  );
 }

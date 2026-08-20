@@ -1,18 +1,44 @@
-import { Sidebar } from "@/components/layout/sidebar";
-import { Header } from "@/components/layout/header";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getSessionProfile } from "@/lib/queries/get-session-profile";
+import { SessionProvider } from "@/lib/auth/session-context";
+import { AppShell } from "@/components/layout/app-shell";
 
-export default function AppLayout({
+export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = await createClient();
+
+  // The proxy (middleware) already redirects unauthenticated requests to /login
+  // before they reach this layout. This check is defense in depth, not the
+  // primary guard -- if it somehow fires, treat it the same way: bounce to login.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const profile = await getSessionProfile(supabase, user.id);
+
+  // Missing profile: the signup trigger didn't run, or the row was removed.
+  // This is a data-integrity problem, not a normal "not logged in" case.
+  if (!profile) {
+    redirect("/setup-error");
+  }
+
+  // Inactive accounts don't get normal access, even though middleware already
+  // checked this -- same defense-in-depth reasoning as above.
+  if (!profile.is_active) {
+    redirect("/account-disabled");
+  }
+
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Header />
-        <main className="flex-1 p-6">{children}</main>
-      </div>
-    </div>
+    <SessionProvider profile={profile}>
+      <AppShell>{children}</AppShell>
+    </SessionProvider>
   );
 }

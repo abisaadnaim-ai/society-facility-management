@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { NAV_ITEMS } from "@/lib/nav-items";
+import { NavLinks } from "@/components/layout/nav-links";
 
 export function Sidebar() {
   return (
@@ -9,17 +8,7 @@ export function Sidebar() {
           Society Facility Management
         </span>
       </div>
-      <nav className="flex flex-col gap-0.5 p-2">
-        {NAV_ITEMS.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+      <NavLinks />
     </aside>
   );
 }
