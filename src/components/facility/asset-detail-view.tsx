@@ -17,6 +17,15 @@ import { AssetAttachmentsPanel } from "@/components/facility/asset-attachments-p
 import { formatDate, formatDateTime, statusVariant } from "@/lib/format";
 import type { WorkOrderRow } from "@/lib/types/fm";
 import { WorkOrderStatusBadge, PriorityBadge } from "@/components/facility/status-badges";
+import {
+  frequencyLabel,
+  deriveDueStatus,
+  DUE_STATUS_META,
+  PLAN_STATUS_META,
+  type PpmPlanRow,
+  type PpmPlanStatus,
+  type DueStatus,
+} from "@/lib/types/ppm";
 import { setAssetActive } from "@/lib/actions/assets";
 
 type Tab = "details" | "attachments" | "activity" | "maintenance" | "work_orders" | "ppm";
@@ -35,6 +44,7 @@ export function AssetDetailView({
   activity,
   attachments,
   workOrders,
+  ppmPlans,
   canManage,
   organizationId,
 }: {
@@ -42,6 +52,7 @@ export function AssetDetailView({
   activity: AssetActivityWithActor[];
   attachments: AssetAttachmentWithUploader[];
   workOrders: WorkOrderRow[];
+  ppmPlans: PpmPlanRow[];
   canManage: boolean;
   organizationId: string;
 }) {
@@ -49,6 +60,7 @@ export function AssetDetailView({
   const [tab, setTab] = useState<Tab>("details");
   const [confirmRetire, setConfirmRetire] = useState(false);
   const [busy, setBusy] = useState(false);
+  const today = new Date().toISOString().slice(0, 10);
 
   async function toggleActive() {
     setBusy(true);
@@ -173,10 +185,58 @@ export function AssetDetailView({
         )
       )}
       {tab === "ppm" && (
-        <EmptyState
-          title="No preventive maintenance scheduled"
-          description="PPM schedules for this asset will appear here in a future phase."
-        />
+        <div className="space-y-3">
+          {canManage && (
+            <div className="flex justify-end">
+              <Link href={`/preventive-maintenance/new?asset=${asset.id}`}>
+                <Button size="sm">Create PPM Plan</Button>
+              </Link>
+            </div>
+          )}
+          {ppmPlans.length === 0 ? (
+            <EmptyState
+              title="No preventive maintenance scheduled"
+              description="Create a PPM plan to schedule recurring maintenance for this asset."
+            />
+          ) : (
+            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">PPM #</th>
+                    <th className="px-4 py-3 font-medium">Plan</th>
+                    <th className="px-4 py-3 font-medium">Frequency</th>
+                    <th className="px-4 py-3 font-medium">Next Due</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {ppmPlans.map((p) => {
+                    const due = deriveDueStatus(p.status, p.next_due_date, today) as DueStatus;
+                    const dueMeta = DUE_STATUS_META[due];
+                    const planMeta = PLAN_STATUS_META[p.status as PpmPlanStatus];
+                    return (
+                      <tr
+                        key={p.id}
+                        onClick={() => router.push(`/preventive-maintenance/${p.id}`)}
+                        className="cursor-pointer hover:bg-slate-50"
+                      >
+                        <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900">{p.ppm_number}</td>
+                        <td className="px-4 py-3 text-slate-700">{p.name}</td>
+                        <td className="px-4 py-3 text-slate-700">{frequencyLabel(p.frequency_unit, p.frequency_interval)}</td>
+                        <td className="whitespace-nowrap px-4 py-3">
+                          <span className="text-slate-700">{formatDate(p.next_due_date)}</span>{" "}
+                          {p.status === "active" && <Badge variant={dueMeta.tone}>{dueMeta.label}</Badge>}
+                        </td>
+                        <td className="px-4 py-3"><Badge variant={planMeta?.tone ?? "neutral"}>{planMeta?.label ?? p.status}</Badge></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       )}
 
       <ConfirmDialog

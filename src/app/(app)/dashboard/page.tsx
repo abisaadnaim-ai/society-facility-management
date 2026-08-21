@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/queries/get-session-profile";
 import { getOperationsDashboard } from "@/lib/queries/operations-dashboard";
+import { getPpmSummary } from "@/lib/queries/ppm";
 import { formatDate } from "@/lib/format";
 import {
   RequestStatusBadge,
@@ -50,6 +51,7 @@ export default async function DashboardPage() {
   const firstName = (profile?.full_name ?? profile?.email ?? "there").split(" ")[0];
 
   const { counts, recentRequests, recentWorkOrders } = await getOperationsDashboard(supabase);
+  const ppm = await getPpmSummary(supabase);
 
   return (
     <div>
@@ -66,6 +68,19 @@ export default async function DashboardPage() {
         <StatCard label="Waiting / on hold" value={counts.waiting} href="/work-orders" />
         <StatCard label="Awaiting verification" value={counts.completedAwaitingVerification} href="/work-orders" />
         <StatCard label="Critical open" value={counts.criticalOpen} href="/work-orders" highlight />
+      </div>
+
+      <div className="mb-8">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-900">Preventive Maintenance</h2>
+          <Link href="/preventive-maintenance" className="text-sm text-slate-500 hover:text-slate-900">View all</Link>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard label="PPM due today" value={ppm.dueToday} href="/preventive-maintenance" />
+          <StatCard label="PPM due next 7 days" value={ppm.dueNext7Days} href="/preventive-maintenance" />
+          <StatCard label="PPM overdue" value={ppm.overdue} href="/preventive-maintenance" highlight />
+          <StatCard label="Open PPM work orders" value={ppm.openPpmWorkOrders} href="/work-orders" />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
