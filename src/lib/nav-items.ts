@@ -14,9 +14,9 @@ export type NavGroup = {
 };
 
 /**
- * Grouped navigation. Areas are intentionally NOT a top-level item — they are
+ * Grouped navigation. Areas are intentionally NOT a top-level item - they are
  * managed inside each Location's detail page, matching the
- * Organization → Location → Area → Asset hierarchy. Settings sub-pages for
+ * Organization -> Location -> Area -> Asset hierarchy. Settings sub-pages for
  * asset configuration are Super Admin only.
  */
 export const NAV_GROUPS: readonly NavGroup[] = [
@@ -31,6 +31,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   {
     label: "Operations",
     items: [
+      { label: "FM Requests", href: "/fm-requests" },
       { label: "Work Orders", href: "/work-orders" },
       { label: "Preventive Maintenance", href: "/preventive-maintenance" },
       { label: "Inspections", href: "/inspections" },
@@ -54,7 +55,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   },
 ];
 
-/** Flat list of every href → label, for the header page-title lookup. */
+/** Flat list of every href -> label, for the header page-title lookup. */
 export const ALL_NAV_ITEMS: readonly NavItem[] = NAV_GROUPS.flatMap((g) => g.items);
 
 export function visibleNavGroups(profile: SessionProfile): NavGroup[] {
