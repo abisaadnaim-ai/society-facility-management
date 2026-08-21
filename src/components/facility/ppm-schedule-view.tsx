@@ -32,7 +32,7 @@ export function PpmScheduleView({ plans, today }: Props) {
   const in30 = addDays(today, 30);
 
   // Bucket ACTIVE plans purely by their stored next_due_date. The date itself is
-  // computed by the database scheduling engine on create/complete/skip -- this view
+  // computed by the database scheduling engine on create/complete/skip — this view
   // only compares it against the window boundaries, so there is no scheduling logic here.
   const buckets = useMemo(() => {
     const overdue: PpmPlanRow[] = [];
