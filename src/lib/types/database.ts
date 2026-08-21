@@ -1023,6 +1023,7 @@ export type Database = {
           job_title: string | null
           organization_id: string
           phone: string | null
+          primary_location_id: string | null
           role_id: string | null
           updated_at: string
         }
@@ -1036,6 +1037,7 @@ export type Database = {
           job_title?: string | null
           organization_id: string
           phone?: string | null
+          primary_location_id?: string | null
           role_id?: string | null
           updated_at?: string
         }
@@ -1049,6 +1051,7 @@ export type Database = {
           job_title?: string | null
           organization_id?: string
           phone?: string | null
+          primary_location_id?: string | null
           role_id?: string | null
           updated_at?: string
         }
@@ -1146,6 +1149,70 @@ export type Database = {
         }
         Returns: string
       }
+      admin_list_users: {
+        Args: never
+        Returns: {
+          id: string
+          full_name: string | null
+          email: string | null
+          phone: string | null
+          job_title: string | null
+          role_id: string | null
+          role_code: string | null
+          role_name: string | null
+          primary_location_id: string | null
+          location_name: string | null
+          is_active: boolean
+          created_at: string
+          last_sign_in_at: string | null
+        }[]
+      }
+      admin_get_user: {
+        Args: { p_id: string }
+        Returns: {
+          id: string
+          full_name: string | null
+          email: string | null
+          phone: string | null
+          job_title: string | null
+          role_id: string | null
+          role_code: string | null
+          role_name: string | null
+          primary_location_id: string | null
+          location_name: string | null
+          is_active: boolean
+          created_at: string
+          last_sign_in_at: string | null
+          fm_requests_submitted: number
+          work_orders_assigned: number
+        }[]
+      }
+      admin_invite_user: {
+        Args: {
+          p_full_name: string
+          p_email: string
+          p_role_id: string
+          p_phone?: string | null
+          p_job_title?: string | null
+          p_primary_location_id?: string | null
+          p_is_active?: boolean
+        }
+        Returns: Json
+      }
+      admin_update_user: {
+        Args: {
+          p_user_id: string
+          p_full_name: string
+          p_phone: string | null
+          p_job_title: string | null
+          p_role_id: string
+          p_primary_location_id: string | null
+          p_is_active: boolean
+        }
+        Returns: Json
+      }
+      admin_reset_password: { Args: { p_user_id: string }; Returns: Json }
+      admin_change_email: { Args: { p_user_id: string; p_email: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
