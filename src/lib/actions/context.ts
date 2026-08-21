@@ -33,6 +33,29 @@ export async function getActionContext(): Promise<
   return { ok: true, supabase, profile };
 }
 
+/**
+ * Logs the full technical detail of a failure to the server logs only. The
+ * user still receives a short, non-sensitive message via friendlyDbError; we
+ * never leak raw database or security details to the client, but we keep
+ * enough server-side to diagnose issues like this one.
+ */
+export function logActionError(scope: string, error: unknown): void {
+  const e = (error ?? {}) as {
+    message?: string;
+    code?: string;
+    details?: string;
+    hint?: string;
+  };
+  const parts = [
+    `[action:${scope}]`,
+    e.code ? `(${e.code})` : null,
+    e.message ?? String(error),
+    e.details ? `| details: ${e.details}` : null,
+    e.hint ? `| hint: ${e.hint}` : null,
+  ].filter(Boolean);
+  console.error(parts.join(" "));
+}
+
 /** Maps common Postgres/PostgREST errors to friendly messages. */
 export function friendlyDbError(message: string): string {
   const m = message.toLowerCase();

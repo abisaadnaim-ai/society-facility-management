@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
-import { getActionContext, friendlyDbError, type ActionResult } from "@/lib/actions/context";
+import {
+  getActionContext,
+  friendlyDbError,
+  logActionError,
+  type ActionResult,
+} from "@/lib/actions/context";
 
 async function reqStatusId(
   supabase: SupabaseClient<Database>,
@@ -47,6 +52,13 @@ export async function createFmRequest(
   const statusId = await reqStatusId(ctx.supabase, "new");
   if (!statusId) return { ok: false, error: "Request statuses are not configured." };
 
+  // The official priority is set by a Facility Manager / Super Admin during
+  // review -- never by a requester. Enforce this on the server so a modified
+  // client request cannot smuggle a priority through, regardless of the UI.
+  const roleCode = ctx.profile.role?.code ?? null;
+  const canSetPriority = roleCode === "super_admin" || roleCode === "facility_manager";
+  const priorityId = canSetPriority ? input.priority_id || null : null;
+
   const { data, error } = await ctx.supabase
     .from("fm_requests")
     .insert({
@@ -55,7 +67,7 @@ export async function createFmRequest(
       area_id: input.area_id || null,
       asset_id: input.asset_id || null,
       category_id: input.category_id,
-      priority_id: input.priority_id || null,
+      priority_id: priorityId,
       status_id: statusId,
       title: input.title.trim(),
       description: input.description?.trim() || null,
@@ -65,12 +77,16 @@ export async function createFmRequest(
     .select("id")
     .single();
 
-  if (error) return { ok: false, error: friendlyDbError(error.message) };
+  if (error) {
+    logActionError("createFmRequest", error);
+    return { ok: false, error: friendlyDbError(error.message) };
+  }
 
-  await ctx.supabase.rpc("log_fm_request_activity", {
+  const { error: logError } = await ctx.supabase.rpc("log_fm_request_activity", {
     p_request_id: data.id,
     p_action: "created",
   });
+  if (logError) logActionError("createFmRequest.activity", logError);
 
   revalidatePath("/fm-requests");
   revalidatePath("/dashboard");
