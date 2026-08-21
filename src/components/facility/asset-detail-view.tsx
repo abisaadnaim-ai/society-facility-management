@@ -246,7 +246,7 @@ function ActivityTab({ activity }: { activity: AssetActivityWithActor[] }) {
       <EmptyState
         title="No activity recorded"
         description="Changes to this asset - status updates, moves, edits - will be logged here."
-        />
+      />
     );
   }
 
