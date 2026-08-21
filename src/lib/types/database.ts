@@ -12,6 +12,537 @@ export type Database = {
   }
   public: {
     Tables: {
+      fm_categories: {
+        Row: {
+          id: string
+          organization_id: string
+          name: string
+          code: string | null
+          description: string | null
+          parent_category_id: string | null
+          is_active: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          name: string
+          code?: string | null
+          description?: string | null
+          parent_category_id?: string | null
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          name?: string
+          code?: string | null
+          description?: string | null
+          parent_category_id?: string | null
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fm_priorities: {
+        Row: {
+          id: string
+          organization_id: string
+          name: string
+          code: string
+          description: string | null
+          response_target_minutes: number | null
+          resolution_target_minutes: number | null
+          is_active: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          name: string
+          code: string
+          description?: string | null
+          response_target_minutes?: number | null
+          resolution_target_minutes?: number | null
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          name?: string
+          code?: string
+          description?: string | null
+          response_target_minutes?: number | null
+          resolution_target_minutes?: number | null
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fm_request_statuses: {
+        Row: {
+          id: string
+          organization_id: string
+          name: string
+          code: string
+          description: string | null
+          is_active: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          name: string
+          code: string
+          description?: string | null
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          name?: string
+          code?: string
+          description?: string | null
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      work_order_statuses: {
+        Row: {
+          id: string
+          organization_id: string
+          name: string
+          code: string
+          description: string | null
+          is_active: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          name: string
+          code: string
+          description?: string | null
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          name?: string
+          code?: string
+          description?: string | null
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fm_requests: {
+        Row: {
+          id: string
+          organization_id: string
+          request_number: string
+          location_id: string
+          area_id: string | null
+          asset_id: string | null
+          category_id: string
+          priority_id: string | null
+          status_id: string
+          title: string
+          description: string | null
+          exact_location_notes: string | null
+          requested_by: string
+          reviewed_by: string | null
+          reviewed_at: string | null
+          rejection_reason: string | null
+          cancellation_reason: string | null
+          closed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          request_number?: string
+          location_id: string
+          area_id?: string | null
+          asset_id?: string | null
+          category_id: string
+          priority_id?: string | null
+          status_id: string
+          title: string
+          description?: string | null
+          exact_location_notes?: string | null
+          requested_by: string
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          rejection_reason?: string | null
+          cancellation_reason?: string | null
+          closed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          request_number?: string
+          location_id?: string
+          area_id?: string | null
+          asset_id?: string | null
+          category_id?: string
+          priority_id?: string | null
+          status_id?: string
+          title?: string
+          description?: string | null
+          exact_location_notes?: string | null
+          requested_by?: string
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          rejection_reason?: string | null
+          cancellation_reason?: string | null
+          closed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fm_request_comments: {
+        Row: {
+          id: string
+          organization_id: string
+          request_id: string
+          author_id: string
+          body: string
+          is_internal: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          request_id: string
+          author_id: string
+          body: string
+          is_internal?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          request_id?: string
+          author_id?: string
+          body?: string
+          is_internal?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fm_request_attachments: {
+        Row: {
+          id: string
+          organization_id: string
+          request_id: string
+          file_name: string
+          file_path: string
+          file_type: string | null
+          file_size: number | null
+          attachment_type: string | null
+          uploaded_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          request_id: string
+          file_name: string
+          file_path: string
+          file_type?: string | null
+          file_size?: number | null
+          attachment_type?: string | null
+          uploaded_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          request_id?: string
+          file_name?: string
+          file_path?: string
+          file_type?: string | null
+          file_size?: number | null
+          attachment_type?: string | null
+          uploaded_by?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      fm_request_activity: {
+        Row: {
+          id: string
+          organization_id: string
+          request_id: string
+          actor_id: string | null
+          action: string
+          field_name: string | null
+          old_value: string | null
+          new_value: string | null
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          request_id: string
+          actor_id?: string | null
+          action: string
+          field_name?: string | null
+          old_value?: string | null
+          new_value?: string | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          request_id?: string
+          actor_id?: string | null
+          action?: string
+          field_name?: string | null
+          old_value?: string | null
+          new_value?: string | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      work_orders: {
+        Row: {
+          id: string
+          organization_id: string
+          work_order_number: string
+          fm_request_id: string | null
+          location_id: string
+          area_id: string | null
+          asset_id: string | null
+          category_id: string
+          priority_id: string
+          status_id: string
+          title: string
+          description: string | null
+          assigned_to: string | null
+          created_by: string
+          due_date: string | null
+          started_at: string | null
+          completed_at: string | null
+          completion_notes: string | null
+          verified_by: string | null
+          verified_at: string | null
+          verification_notes: string | null
+          closed_by: string | null
+          closed_at: string | null
+          cancellation_reason: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          work_order_number?: string
+          fm_request_id?: string | null
+          location_id: string
+          area_id?: string | null
+          asset_id?: string | null
+          category_id: string
+          priority_id: string
+          status_id: string
+          title: string
+          description?: string | null
+          assigned_to?: string | null
+          created_by: string
+          due_date?: string | null
+          started_at?: string | null
+          completed_at?: string | null
+          completion_notes?: string | null
+          verified_by?: string | null
+          verified_at?: string | null
+          verification_notes?: string | null
+          closed_by?: string | null
+          closed_at?: string | null
+          cancellation_reason?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          work_order_number?: string
+          fm_request_id?: string | null
+          location_id?: string
+          area_id?: string | null
+          asset_id?: string | null
+          category_id?: string
+          priority_id?: string
+          status_id?: string
+          title?: string
+          description?: string | null
+          assigned_to?: string | null
+          created_by?: string
+          due_date?: string | null
+          started_at?: string | null
+          completed_at?: string | null
+          completion_notes?: string | null
+          verified_by?: string | null
+          verified_at?: string | null
+          verification_notes?: string | null
+          closed_by?: string | null
+          closed_at?: string | null
+          cancellation_reason?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      work_order_comments: {
+        Row: {
+          id: string
+          organization_id: string
+          work_order_id: string
+          author_id: string
+          body: string
+          is_internal: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          work_order_id: string
+          author_id: string
+          body: string
+          is_internal?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          work_order_id?: string
+          author_id?: string
+          body?: string
+          is_internal?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      work_order_attachments: {
+        Row: {
+          id: string
+          organization_id: string
+          work_order_id: string
+          file_name: string
+          file_path: string
+          file_type: string | null
+          file_size: number | null
+          attachment_type: string | null
+          uploaded_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          work_order_id: string
+          file_name: string
+          file_path: string
+          file_type?: string | null
+          file_size?: number | null
+          attachment_type?: string | null
+          uploaded_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          work_order_id?: string
+          file_name?: string
+          file_path?: string
+          file_type?: string | null
+          file_size?: number | null
+          attachment_type?: string | null
+          uploaded_by?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      work_order_activity: {
+        Row: {
+          id: string
+          organization_id: string
+          work_order_id: string
+          actor_id: string | null
+          action: string
+          field_name: string | null
+          old_value: string | null
+          new_value: string | null
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          work_order_id: string
+          actor_id?: string | null
+          action: string
+          field_name?: string | null
+          old_value?: string | null
+          new_value?: string | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          work_order_id?: string
+          actor_id?: string | null
+          action?: string
+          field_name?: string | null
+          old_value?: string | null
+          new_value?: string | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       areas: {
         Row: {
           area_type: string | null
@@ -576,6 +1107,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      log_fm_request_activity: {
+        Args: {
+          p_request_id: string
+          p_action: string
+          p_field_name?: string
+          p_old_value?: string
+          p_new_value?: string
+          p_metadata?: Json
+        }
+        Returns: string
+      }
+      log_work_order_activity: {
+        Args: {
+          p_work_order_id: string
+          p_action: string
+          p_field_name?: string
+          p_old_value?: string
+          p_new_value?: string
+          p_metadata?: Json
+        }
+        Returns: string
+      }
       can_manage_configuration: { Args: never; Returns: boolean }
       can_manage_facility: { Args: never; Returns: boolean }
       can_read_facility: { Args: never; Returns: boolean }
