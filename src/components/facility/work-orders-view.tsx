@@ -157,7 +157,12 @@ export function WorkOrdersView({
                     onClick={() => router.push(`/work-orders/${w.id}`)}
                     className="cursor-pointer hover:bg-slate-50"
                   >
-                    <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900">{w.work_order_number}</td>
+                    <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900">
+                      {w.work_order_number}
+                      {w.source === "ppm" && (
+                        <span className="ml-2 rounded bg-sky-50 px-1.5 py-0.5 text-xs font-medium text-sky-700">PPM</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-slate-700">{w.title}</td>
                     <td className="px-4 py-3 text-slate-600">{w.location?.name ?? "-"}</td>
                     <td className="px-4 py-3 text-slate-600">{w.asset?.name ?? "-"}</td>
@@ -179,7 +184,12 @@ export function WorkOrdersView({
                 className="block rounded-lg border border-slate-200 bg-white p-4"
               >
                 <div className="mb-1 flex items-center justify-between gap-2">
-                  <span className="text-sm font-semibold text-slate-900">{w.work_order_number}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-slate-900">{w.work_order_number}</span>
+                    {w.source === "ppm" && (
+                      <span className="rounded bg-sky-50 px-1.5 py-0.5 text-xs font-medium text-sky-700">PPM</span>
+                    )}
+                  </span>
                   <WorkOrderStatusBadge status={w.status} />
                 </div>
                 <p className="mb-2 text-sm text-slate-700">{w.title}</p>

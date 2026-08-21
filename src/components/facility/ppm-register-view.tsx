@@ -122,11 +122,16 @@ export function PpmRegisterView({ plans, summary, canManage, today }: Props) {
         title="Preventive Maintenance"
         description="Recurring maintenance plans (PPM) that automatically raise work orders when due."
         actions={
-          canManage ? (
-            <Link href="/preventive-maintenance/new">
-              <Button>New PPM Plan</Button>
+          <div className="flex gap-2">
+            <Link href="/preventive-maintenance/schedule">
+              <Button variant="outline">Upcoming schedule</Button>
             </Link>
-          ) : undefined
+            {canManage && (
+              <Link href="/preventive-maintenance/new">
+                <Button>New PPM Plan</Button>
+              </Link>
+            )}
+          </div>
         }
       />
 
