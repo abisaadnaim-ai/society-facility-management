@@ -351,6 +351,9 @@ export type Database = {
           organization_id: string
           work_order_number: string
           fm_request_id: string | null
+          source: string
+          ppm_plan_id: string | null
+          ppm_occurrence_id: string | null
           location_id: string
           area_id: string | null
           asset_id: string | null
@@ -379,6 +382,9 @@ export type Database = {
           organization_id: string
           work_order_number?: string
           fm_request_id?: string | null
+          source?: string
+          ppm_plan_id?: string | null
+          ppm_occurrence_id?: string | null
           location_id: string
           area_id?: string | null
           asset_id?: string | null
@@ -407,6 +413,9 @@ export type Database = {
           organization_id?: string
           work_order_number?: string
           fm_request_id?: string | null
+          source?: string
+          ppm_plan_id?: string | null
+          ppm_occurrence_id?: string | null
           location_id?: string
           area_id?: string | null
           asset_id?: string | null
@@ -429,6 +438,261 @@ export type Database = {
           cancellation_reason?: string | null
           created_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ppm_plans: {
+        Row: {
+          id: string
+          organization_id: string
+          ppm_number: string
+          asset_id: string
+          category_id: string
+          name: string
+          description: string | null
+          maintenance_instructions: string | null
+          priority_id: string
+          frequency_unit: string
+          frequency_interval: number
+          start_date: string
+          next_due_date: string
+          last_completed_at: string | null
+          default_assigned_to: string | null
+          estimated_duration_minutes: number | null
+          lead_time_days: number
+          due_window_days: number | null
+          status: string
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          ppm_number?: string
+          asset_id: string
+          category_id: string
+          name: string
+          description?: string | null
+          maintenance_instructions?: string | null
+          priority_id: string
+          frequency_unit: string
+          frequency_interval: number
+          start_date: string
+          next_due_date: string
+          last_completed_at?: string | null
+          default_assigned_to?: string | null
+          estimated_duration_minutes?: number | null
+          lead_time_days?: number
+          due_window_days?: number | null
+          status?: string
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          ppm_number?: string
+          asset_id?: string
+          category_id?: string
+          name?: string
+          description?: string | null
+          maintenance_instructions?: string | null
+          priority_id?: string
+          frequency_unit?: string
+          frequency_interval?: number
+          start_date?: string
+          next_due_date?: string
+          last_completed_at?: string | null
+          default_assigned_to?: string | null
+          estimated_duration_minutes?: number | null
+          lead_time_days?: number
+          due_window_days?: number | null
+          status?: string
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ppm_plan_tasks: {
+        Row: {
+          id: string
+          organization_id: string
+          ppm_plan_id: string
+          task_description: string
+          instructions: string | null
+          is_required: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          ppm_plan_id: string
+          task_description: string
+          instructions?: string | null
+          is_required?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          ppm_plan_id?: string
+          task_description?: string
+          instructions?: string | null
+          is_required?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ppm_occurrences: {
+        Row: {
+          id: string
+          organization_id: string
+          ppm_plan_id: string
+          scheduled_date: string
+          due_date: string
+          status: string
+          work_order_id: string | null
+          generated_at: string | null
+          completed_at: string | null
+          skipped_at: string | null
+          skipped_by: string | null
+          skip_reason: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          ppm_plan_id: string
+          scheduled_date: string
+          due_date: string
+          status?: string
+          work_order_id?: string | null
+          generated_at?: string | null
+          completed_at?: string | null
+          skipped_at?: string | null
+          skipped_by?: string | null
+          skip_reason?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          ppm_plan_id?: string
+          scheduled_date?: string
+          due_date?: string
+          status?: string
+          work_order_id?: string | null
+          generated_at?: string | null
+          completed_at?: string | null
+          skipped_at?: string | null
+          skipped_by?: string | null
+          skip_reason?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      work_order_tasks: {
+        Row: {
+          id: string
+          organization_id: string
+          work_order_id: string
+          ppm_plan_task_id: string | null
+          task_description: string
+          instructions: string | null
+          is_required: boolean
+          is_completed: boolean
+          completed_by: string | null
+          completed_at: string | null
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          work_order_id: string
+          ppm_plan_task_id?: string | null
+          task_description: string
+          instructions?: string | null
+          is_required?: boolean
+          is_completed?: boolean
+          completed_by?: string | null
+          completed_at?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          work_order_id?: string
+          ppm_plan_task_id?: string | null
+          task_description?: string
+          instructions?: string | null
+          is_required?: boolean
+          is_completed?: boolean
+          completed_by?: string | null
+          completed_at?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ppm_activity: {
+        Row: {
+          id: string
+          organization_id: string
+          ppm_plan_id: string | null
+          occurrence_id: string | null
+          actor_id: string | null
+          is_system: boolean
+          action: string
+          field_name: string | null
+          old_value: string | null
+          new_value: string | null
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          ppm_plan_id?: string | null
+          occurrence_id?: string | null
+          actor_id?: string | null
+          is_system?: boolean
+          action: string
+          field_name?: string | null
+          old_value?: string | null
+          new_value?: string | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          ppm_plan_id?: string | null
+          occurrence_id?: string | null
+          actor_id?: string | null
+          is_system?: boolean
+          action?: string
+          field_name?: string | null
+          old_value?: string | null
+          new_value?: string | null
+          metadata?: Json | null
+          created_at?: string
         }
         Relationships: []
       }
@@ -1213,6 +1477,9 @@ export type Database = {
       }
       admin_reset_password: { Args: { p_user_id: string }; Returns: Json }
       admin_change_email: { Args: { p_user_id: string; p_email: string }; Returns: Json }
+      ppm_generate_now: { Args: { p_occurrence_id: string }; Returns: string }
+      ppm_skip_occurrence: { Args: { p_occurrence_id: string; p_reason: string }; Returns: undefined }
+      ppm_set_plan_status: { Args: { p_plan_id: string; p_status: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
