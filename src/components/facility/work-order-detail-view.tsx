@@ -47,6 +47,8 @@ import type {
   WorkOrderStatus,
   PersonOption,
 } from "@/lib/types/fm";
+import type { WorkOrderTaskRow } from "@/lib/types/ppm";
+import { setWorkOrderTaskCompleted } from "@/lib/actions/ppm";
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -67,6 +69,8 @@ export function WorkOrderDetailView({
   organizationId,
   statuses,
   technicians,
+  tasks,
+  ppmPlan,
 }: {
   workOrder: WorkOrderDetail;
   activity: WorkOrderActivityRow[];
@@ -77,6 +81,8 @@ export function WorkOrderDetailView({
   organizationId: string;
   statuses: WorkOrderStatus[];
   technicians: PersonOption[];
+  tasks: WorkOrderTaskRow[];
+  ppmPlan: { id: string; ppm_number: string; name: string } | null;
 }) {
   const router = useRouter();
   const wo = workOrder;
@@ -268,6 +274,17 @@ export function WorkOrderDetailView({
             </dl>
           </section>
 
+          {tasks.length > 0 && (
+            <section className="rounded-lg border border-slate-200 bg-white p-5">
+              <h2 className="mb-3 text-sm font-semibold text-slate-900">Maintenance Tasks</h2>
+              <WoTasksChecklist
+                tasks={tasks}
+                workOrderId={wo.id}
+                canToggle={(isManager || isAssignedTech) && code !== "closed" && code !== "cancelled"}
+              />
+            </section>
+          )}
+
           <section className="rounded-lg border border-slate-200 bg-white p-5">
             <h2 className="mb-3 text-sm font-semibold text-slate-900">Attachments</h2>
             <AttachmentsPanel
@@ -293,7 +310,15 @@ export function WorkOrderDetailView({
         <div className="space-y-5">
           <section className="rounded-lg border border-slate-200 bg-white p-5">
             <h2 className="mb-3 text-sm font-semibold text-slate-900">Origin</h2>
-            {wo.fm_request ? (
+            {wo.source === "ppm" && ppmPlan ? (
+              <Link
+                href={`/preventive-maintenance/${ppmPlan.id}`}
+                className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2 hover:bg-slate-50"
+              >
+                <span className="text-sm text-slate-500">Preventive Maintenance</span>
+                <span className="text-sm font-medium text-slate-900">{ppmPlan.ppm_number}</span>
+              </Link>
+            ) : wo.fm_request ? (
               <Link
                 href={`/fm-requests/${wo.fm_request.id}`}
                 className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2 hover:bg-slate-50"
@@ -440,6 +465,82 @@ function TechWaitingControl({
       <Button size="sm" variant="outline" disabled={!val || pending} isLoading={pending} onClick={() => onPick(val)}>
         Set
       </Button>
+    </div>
+  );
+}
+
+function WoTasksChecklist({
+  tasks,
+  workOrderId,
+  canToggle,
+}: {
+  tasks: WorkOrderTaskRow[];
+  workOrderId: string;
+  canToggle: boolean;
+}) {
+  const router = useRouter();
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const total = tasks.length;
+  const completed = tasks.filter((t) => t.is_completed).length;
+  const requiredRemaining = tasks.filter((t) => t.is_required && !t.is_completed).length;
+
+  async function toggle(t: WorkOrderTaskRow) {
+    setBusyId(t.id);
+    setErr(null);
+    const res = await setWorkOrderTaskCompleted(t.id, workOrderId, !t.is_completed);
+    setBusyId(null);
+    if (!res.ok) setErr(res.error);
+    else router.refresh();
+  }
+
+  return (
+    <div>
+      <div className="mb-3 flex flex-wrap gap-3 text-xs">
+        <span className="text-slate-500">{completed}/{total} completed</span>
+        {requiredRemaining > 0 && (
+          <span className="font-medium text-amber-600">{requiredRemaining} required remaining</span>
+        )}
+        {requiredRemaining === 0 && total > 0 && (
+          <span className="font-medium text-emerald-600">All required tasks done</span>
+        )}
+      </div>
+      {err && <p className="mb-2 text-sm text-red-600">{err}</p>}
+      <ul className="space-y-2">
+        {tasks.map((t) => (
+          <li key={t.id} className="flex items-start gap-3 rounded-md border border-slate-200 p-3">
+            <input
+              type="checkbox"
+              className="mt-1 h-4 w-4"
+              checked={t.is_completed}
+              disabled={!canToggle || busyId === t.id}
+              onChange={() => toggle(t)}
+            />
+            <div className="flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={t.is_completed ? "text-sm text-slate-400 line-through" : "text-sm font-medium text-slate-800"}>
+                  {t.task_description}
+                </span>
+                {t.is_required && (
+                  <span className="rounded bg-sky-50 px-1.5 py-0.5 text-xs text-sky-700">Required</span>
+                )}
+              </div>
+              {t.instructions && <p className="mt-1 text-xs text-slate-500">{t.instructions}</p>}
+              {t.is_completed && t.completed_at && (
+                <p className="mt-1 text-xs text-slate-400">
+                  Completed by {personName(t.completer)} - {formatDateTime(t.completed_at)}
+                </p>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+      {!canToggle && (
+        <p className="mt-2 text-xs text-slate-400">
+          Only the assigned technician or a facility manager can update these tasks.
+        </p>
+      )}
     </div>
   );
 }

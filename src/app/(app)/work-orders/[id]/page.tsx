@@ -8,6 +8,7 @@ import {
   getWorkOrderAttachments,
 } from "@/lib/queries/work-orders";
 import { getWorkOrderStatuses, getTechnicianOptions } from "@/lib/queries/fm-config";
+import { getWorkOrderTasks } from "@/lib/queries/ppm";
 import { WorkOrderDetailView } from "@/components/facility/work-order-detail-view";
 import type { RoleCode } from "@/lib/types/auth";
 
@@ -27,13 +28,24 @@ export default async function WorkOrderDetailPage({
   const workOrder = await getWorkOrderById(supabase, id);
   if (!workOrder) notFound();
 
-  const [activity, comments, attachments, statuses, technicians] = await Promise.all([
+  const [activity, comments, attachments, statuses, technicians, tasks] = await Promise.all([
     getWorkOrderActivity(supabase, id),
     getWorkOrderComments(supabase, id),
     getWorkOrderAttachments(supabase, id),
     getWorkOrderStatuses(supabase),
     getTechnicianOptions(supabase),
+    getWorkOrderTasks(supabase, id),
   ]);
+
+  let ppmPlan: { id: string; ppm_number: string; name: string } | null = null;
+  if (workOrder.source === "ppm" && workOrder.ppm_plan_id) {
+    const { data: plan } = await supabase
+      .from("ppm_plans")
+      .select("id, ppm_number, name")
+      .eq("id", workOrder.ppm_plan_id)
+      .maybeSingle();
+    ppmPlan = (plan as unknown as { id: string; ppm_number: string; name: string }) ?? null;
+  }
 
   return (
     <WorkOrderDetailView
@@ -46,6 +58,8 @@ export default async function WorkOrderDetailPage({
       organizationId={profile?.organization_id ?? ""}
       statuses={statuses}
       technicians={technicians}
+      tasks={tasks}
+      ppmPlan={ppmPlan}
     />
   );
 }
