@@ -15,6 +15,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AssetAttachmentsPanel } from "@/components/facility/asset-attachments-panel";
 import { formatDate, formatDateTime, statusVariant } from "@/lib/format";
+import type { WorkOrderRow } from "@/lib/types/fm";
+import { WorkOrderStatusBadge, PriorityBadge } from "@/components/facility/status-badges";
 import { setAssetActive } from "@/lib/actions/assets";
 
 type Tab = "details" | "attachments" | "activity" | "maintenance" | "work_orders" | "ppm";
@@ -32,12 +34,14 @@ export function AssetDetailView({
   asset,
   activity,
   attachments,
+  workOrders,
   canManage,
   organizationId,
 }: {
   asset: AssetWithRelations;
   activity: AssetActivityWithActor[];
   attachments: AssetAttachmentWithUploader[];
+  workOrders: WorkOrderRow[];
   canManage: boolean;
   organizationId: string;
 }) {
@@ -59,7 +63,7 @@ export function AssetDetailView({
     <div>
       <div className="mb-4">
         <Link href="/assets" className="text-sm text-slate-500 hover:text-slate-900">
-          ← Back to Asset Register
+          &larr; Back to Asset Register
         </Link>
       </div>
 
@@ -85,10 +89,10 @@ export function AssetDetailView({
       />
 
       <div className="mb-5 flex flex-wrap items-center gap-2">
-        <Badge variant={statusVariant(asset.status?.code)}>{asset.status?.name ?? "—"}</Badge>
+        <Badge variant={statusVariant(asset.status?.code)}>{asset.status?.name ?? "-"}</Badge>
         {!asset.is_active && <Badge variant="neutral">Inactive</Badge>}
         <span className="text-sm text-slate-500">
-          {asset.location?.name ?? "—"} · {asset.area?.name ?? "—"} · {asset.category?.name ?? "—"}
+          {asset.location?.name ?? "-"} - {asset.area?.name ?? "-"} - {asset.category?.name ?? "-"}
         </span>
       </div>
 
@@ -132,10 +136,41 @@ export function AssetDetailView({
         />
       )}
       {tab === "work_orders" && (
-        <EmptyState
-          title="No work orders yet"
-          description="Work orders raised against this asset will appear here in a future phase."
-        />
+        workOrders.length === 0 ? (
+          <EmptyState
+            title="No work orders yet"
+            description="Work orders raised against this asset will appear here."
+          />
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="px-4 py-3 font-medium">WO #</th>
+                  <th className="px-4 py-3 font-medium">Title</th>
+                  <th className="px-4 py-3 font-medium">Priority</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Created</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {workOrders.map((w) => (
+                  <tr
+                    key={w.id}
+                    onClick={() => router.push(`/work-orders/${w.id}`)}
+                    className="cursor-pointer hover:bg-slate-50"
+                  >
+                    <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900">{w.work_order_number}</td>
+                    <td className="px-4 py-3 text-slate-700">{w.title}</td>
+                    <td className="px-4 py-3"><PriorityBadge priority={w.priority} /></td>
+                    <td className="px-4 py-3"><WorkOrderStatusBadge status={w.status} /></td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-500">{formatDate(w.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
       )}
       {tab === "ppm" && (
         <EmptyState
@@ -159,16 +194,16 @@ export function AssetDetailView({
 
 function DetailsTab({ asset }: { asset: AssetWithRelations }) {
   const rows: { label: string; value: string }[] = [
-    { label: "Manufacturer", value: asset.manufacturer || "—" },
-    { label: "Model", value: asset.model || "—" },
-    { label: "Serial number", value: asset.serial_number || "—" },
-    { label: "Supplier", value: asset.supplier_name || "—" },
+    { label: "Manufacturer", value: asset.manufacturer || "-" },
+    { label: "Model", value: asset.model || "-" },
+    { label: "Serial number", value: asset.serial_number || "-" },
+    { label: "Supplier", value: asset.supplier_name || "-" },
     { label: "Purchase date", value: formatDate(asset.purchase_date) },
     { label: "Installation date", value: formatDate(asset.installation_date) },
     { label: "Warranty expiry", value: formatDate(asset.warranty_expiry) },
     {
       label: "Expected life",
-      value: asset.expected_life_years != null ? `${asset.expected_life_years} years` : "—",
+      value: asset.expected_life_years != null ? `${asset.expected_life_years} years` : "-",
     },
     { label: "Created", value: formatDateTime(asset.created_at) },
     { label: "Last updated", value: formatDateTime(asset.updated_at) },
@@ -210,8 +245,8 @@ function ActivityTab({ activity }: { activity: AssetActivityWithActor[] }) {
     return (
       <EmptyState
         title="No activity recorded"
-        description="Changes to this asset — status updates, moves, edits — will be logged here."
-      />
+        description="Changes to this asset - status updates, moves, edits - will be logged here."
+        />
     );
   }
 

@@ -1,45 +1,43 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/queries/get-session-profile";
-import { getWorkOrders } from "@/lib/queries/work-orders";
+import { getFmRequests } from "@/lib/queries/fm-requests";
 import { getLocations } from "@/lib/queries/locations";
 import {
   getFmCategories,
   getFmPriorities,
-  getWorkOrderStatuses,
-  getTechnicianOptions,
+  getFmRequestStatuses,
+  getOrgPeople,
 } from "@/lib/queries/fm-config";
-import { WorkOrdersView } from "@/components/facility/work-orders-view";
+import { FmRequestsView } from "@/components/facility/fm-requests-view";
 import type { RoleCode } from "@/lib/types/auth";
 
-export default async function WorkOrdersPage() {
+export default async function FmRequestsPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   const profile = user ? await getSessionProfile(supabase, user.id) : null;
   const role = (profile?.role?.code ?? null) as RoleCode | null;
-  const canCreate = role === "super_admin" || role === "facility_manager";
+  const canCreate = role === "super_admin" || role === "facility_manager" || role === "requester";
 
-  const [workOrders, locations, categories, priorities, statuses, technicians] = await Promise.all([
-    getWorkOrders(supabase, { userId: user?.id }),
+  const [requests, locations, categories, priorities, statuses, people] = await Promise.all([
+    getFmRequests(supabase, {}),
     getLocations(supabase, { includeInactive: false }),
     getFmCategories(supabase),
     getFmPriorities(supabase),
-    getWorkOrderStatuses(supabase),
-    getTechnicianOptions(supabase),
+    getFmRequestStatuses(supabase),
+    getOrgPeople(supabase),
   ]);
 
   return (
-    <WorkOrdersView
-      workOrders={workOrders}
+    <FmRequestsView
+      requests={requests}
       locations={locations}
       categories={categories}
       priorities={priorities}
       statuses={statuses}
-      technicians={technicians}
+      people={people}
       canCreate={canCreate}
-      currentUserId={user?.id ?? ""}
-      isTechnician={role === "technician"}
     />
   );
 }
