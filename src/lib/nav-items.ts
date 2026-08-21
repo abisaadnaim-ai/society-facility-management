@@ -48,6 +48,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     label: "Insights & Config",
     items: [
       { label: "Reports", href: "/reports" },
+      { label: "User Management", href: "/settings/users", visible: canManageConfiguration },
       { label: "Asset Categories", href: "/settings/asset-categories", visible: canManageConfiguration },
       { label: "Asset Statuses", href: "/settings/asset-statuses", visible: canManageConfiguration },
       { label: "Settings", href: "/settings" },
