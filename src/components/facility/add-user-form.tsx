@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { inviteUser } from "@/lib/actions/admin-users";
+import { createUserWithPassword } from "@/lib/actions/admin-users";
 import type { RoleOption, LocationOption } from "@/lib/types/users";
 
 function Field({
@@ -36,7 +36,7 @@ export function AddUserForm({
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [created, setCreated] = useState<{ email: string; tempPassword: string; userId: string } | null>(null);
+  const [created, setCreated] = useState<{ email: string; userId: string } | null>(null);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -45,16 +45,31 @@ export function AddUserForm({
   const [roleId, setRoleId] = useState("");
   const [locationId, setLocationId] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  function resetForm() {
+    setFullName(""); setEmail(""); setPhone(""); setJobTitle("");
+    setRoleId(""); setLocationId(""); setIsActive(true);
+    setPassword(""); setConfirmPassword("");
+  }
 
   function submit() {
     setError(null);
     if (!fullName.trim()) return setError("Please enter a full name.");
     if (!email.trim()) return setError("Please enter an email address.");
     if (!roleId) return setError("Please choose a role.");
+    if (password.length < 8) return setError("Temporary password must be at least 8 characters.");
+    if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+      return setError("Temporary password must include at least one letter and one number.");
+    }
+    if (password !== confirmPassword) return setError("The temporary passwords do not match.");
     startTransition(async () => {
-      const res = await inviteUser({
+      const res = await createUserWithPassword({
         full_name: fullName,
         email,
+        password,
+        confirm_password: confirmPassword,
         role_id: roleId,
         phone: phone.trim() || null,
         job_title: jobTitle.trim() || null,
@@ -65,25 +80,26 @@ export function AddUserForm({
         setError(res.error);
         return;
       }
-      setCreated({ email: res.data.email, tempPassword: res.data.tempPassword, userId: res.data.userId });
+      // The temporary password is never shown again; drop it from memory now.
+      setPassword("");
+      setConfirmPassword("");
+      setCreated({ email: res.data.email, userId: res.data.userId });
     });
   }
 
   if (created) {
     return (
       <div className="max-w-2xl space-y-5 rounded-lg border border-slate-200 bg-white p-6">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-900">Account created</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            The account for <span className="font-medium">{created.email}</span> is ready. Share the
-            temporary password below with the user through a secure channel. They should change it
-            after their first sign-in. This password is shown only once.
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4">
+          <p className="text-sm font-medium text-emerald-800">
+            User created successfully. Share the temporary login credentials securely with the user.
           </p>
         </div>
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-amber-700">Temporary password</p>
-          <p className="mt-1 select-all font-mono text-lg text-slate-900">{created.tempPassword}</p>
-        </div>
+        <p className="text-sm text-slate-600">
+          The account for <span className="font-medium">{created.email}</span> is active and can sign
+          in immediately. For security, the temporary password is not shown again — if it&apos;s lost,
+          use <span className="font-medium">Reset password</span> on the user&apos;s profile to issue a new one.
+        </p>
         <div className="flex flex-wrap gap-2">
           <Link href={`/settings/users/${created.userId}`}>
             <Button size="sm">View user</Button>
@@ -96,7 +112,7 @@ export function AddUserForm({
             variant="ghost"
             onClick={() => {
               setCreated(null);
-              setFullName(""); setEmail(""); setPhone(""); setJobTitle(""); setRoleId(""); setLocationId(""); setIsActive(true);
+              resetForm();
             }}
           >
             Add another
@@ -157,6 +173,37 @@ export function AddUserForm({
             <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="h-4 w-4 rounded border-slate-300" />
             Active (can sign in and use the app)
           </label>
+        </section>
+
+        <section className="space-y-4 border-t border-slate-100 pt-5">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900">Temporary Password</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Set a temporary password so the user can sign in immediately (no confirmation email is
+              sent). Share it securely; ask the user to change it after their first sign-in.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Temporary Password" required>
+              <Input
+                type="password"
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+              />
+            </Field>
+            <Field label="Confirm Temporary Password" required>
+              <Input
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter password"
+              />
+            </Field>
+          </div>
+          <p className="text-xs text-slate-500">Use at least 8 characters, including a letter and a number.</p>
         </section>
 
         {error && (

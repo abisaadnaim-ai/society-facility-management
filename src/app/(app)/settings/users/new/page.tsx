@@ -21,7 +21,7 @@ export default async function NewUserPage() {
 
   return (
     <div>
-      <PageHeader title="Add User" description="Create an account and assign a role and primary location." />
+      <PageHeader title="Add User" description="Create a prototype account with a temporary password. The user can sign in immediately — no confirmation email is sent." />
       <AddUserForm roles={roles} locations={locations} />
     </div>
   );
