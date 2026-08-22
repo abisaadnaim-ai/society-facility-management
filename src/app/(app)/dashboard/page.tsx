@@ -4,6 +4,8 @@ import { getSessionProfile } from "@/lib/queries/get-session-profile";
 import { getOperationsDashboard } from "@/lib/queries/operations-dashboard";
 import { getPpmSummary } from "@/lib/queries/ppm";
 import { formatDate } from "@/lib/format";
+import { DashboardQuickActions } from "@/components/facility/dashboard-quick-actions";
+import type { RoleCode } from "@/lib/types/auth";
 import {
   RequestStatusBadge,
   WorkOrderStatusBadge,
@@ -52,6 +54,7 @@ export default async function DashboardPage() {
 
   const { counts, recentRequests, recentWorkOrders } = await getOperationsDashboard(supabase);
   const ppm = await getPpmSummary(supabase);
+  const role = (profile?.role?.code ?? null) as RoleCode | null;
 
   return (
     <div>
@@ -59,6 +62,8 @@ export default async function DashboardPage() {
         <p className="text-sm font-medium text-slate-500">Facility Operations</p>
         <h1 className="mt-1 text-2xl font-semibold text-slate-900">Welcome, {firstName}</h1>
       </div>
+
+      <DashboardQuickActions role={role} counts={counts} ppm={ppm} />
 
       <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         <StatCard label="New requests" value={counts.newRequests} href="/fm-requests" />

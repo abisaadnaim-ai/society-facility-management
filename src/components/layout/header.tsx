@@ -5,6 +5,7 @@ import { usePageTitle } from "@/lib/use-page-title";
 import { displayRoleName } from "@/lib/auth/permissions";
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { SignOutMenuItem } from "@/components/shared/sign-out-menu-item";
+import { BrandLogo } from "@/components/layout/brand-logo";
 
 export function Header({ onOpenMobileNav }: { onOpenMobileNav?: () => void }) {
   const profile = useSession();
@@ -22,6 +23,10 @@ export function Header({ onOpenMobileNav }: { onOpenMobileNav?: () => void }) {
           <MenuIcon />
         </button>
       )}
+
+      <span className="md:hidden">
+        <BrandLogo size={24} />
+      </span>
 
       <h1 className="truncate text-sm font-semibold text-slate-900">{pageTitle}</h1>
 

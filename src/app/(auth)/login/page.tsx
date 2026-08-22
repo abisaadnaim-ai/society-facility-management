@@ -1,4 +1,5 @@
 import { LoginForm } from "@/components/auth/login-form";
+import { BrandLogo } from "@/components/layout/brand-logo";
 
 export default async function LoginPage({
   searchParams,
@@ -10,10 +11,13 @@ export default async function LoginPage({
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="text-xl font-semibold text-slate-900">
+        <div className="mb-4 flex justify-center">
+          <BrandLogo size={64} />
+        </div>
+        <h1 className="text-center text-xl font-semibold text-slate-900">
           Society Facility Management
         </h1>
-        <p className="mt-1 text-sm text-slate-500">Sign in to your account.</p>
+        <p className="mt-1 text-center text-sm text-slate-500">Sign in to your account.</p>
 
         {error === "network" && (
           <p className="mt-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">

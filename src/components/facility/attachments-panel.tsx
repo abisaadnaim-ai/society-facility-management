@@ -49,6 +49,7 @@ export function AttachmentsPanel({
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [type, setType] = useState("General");
@@ -111,6 +112,7 @@ export function AttachmentsPanel({
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
     }
   }
 
@@ -162,6 +164,14 @@ export function AttachmentsPanel({
             onChange={handleFileSelected}
             accept={ACCEPT}
           />
+          <input
+            ref={cameraInputRef}
+            type="file"
+            className="hidden"
+            onChange={handleFileSelected}
+            accept="image/*"
+            capture="environment"
+          />
           {kind === "wo" && (
             <Select value={type} onChange={(e) => setType(e.target.value)} className="w-36">
               {WO_TYPES.map((t) => (
@@ -171,6 +181,9 @@ export function AttachmentsPanel({
               ))}
             </Select>
           )}
+          <Button onClick={() => cameraInputRef.current?.click()} isLoading={uploading} size="sm" variant="outline">
+            Take photo
+          </Button>
           <Button onClick={() => fileInputRef.current?.click()} isLoading={uploading} size="sm">
             Upload file
           </Button>
