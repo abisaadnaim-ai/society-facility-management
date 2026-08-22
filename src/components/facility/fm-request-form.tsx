@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -46,12 +46,21 @@ export function FmRequestForm({
   const [notes, setNotes] = useState("");
   const [priorityId, setPriorityId] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   function onFilesSelected(e: React.ChangeEvent<HTMLInputElement>) {
-    const list = Array.from(e.target.files ?? []).filter((f) => f.size <= MAX_BYTES);
-    setFiles(list);
+    const incoming = Array.from(e.target.files ?? []).filter((f) => f.size <= MAX_BYTES);
+    setFiles((prev) => {
+      const merged = [...prev];
+      for (const f of incoming) {
+        if (!merged.some((m) => m.name === f.name && m.size === f.size)) merged.push(f);
+      }
+      return merged;
+    });
+    // Reset so the same file (or another camera shot) can be selected again.
+    e.target.value = "";
   }
 
   async function uploadEvidence(requestId: string) {
@@ -192,15 +201,46 @@ export function FmRequestForm({
         <section>
           <h2 className="mb-3 text-sm font-semibold text-slate-900">Evidence</h2>
           <input
+            ref={cameraInputRef}
             type="file"
-            multiple
+            accept="image/*"
+            capture="environment"
+            className="hidden"
             onChange={onFilesSelected}
-            accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
-            className="block text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-slate-200"
           />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => cameraInputRef.current?.click()}>
+              Take photo
+            </Button>
+            <label className="inline-flex cursor-pointer items-center rounded-md bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200">
+              Choose photos or files
+              <input
+                type="file"
+                multiple
+                onChange={onFilesSelected}
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
+                className="hidden"
+              />
+            </label>
+          </div>
           {files.length > 0 && (
-            <p className="mt-2 text-xs text-slate-500">{files.length} file(s) selected - uploaded after submit</p>
+            <ul className="mt-3 space-y-1">
+              {files.map((f, i) => (
+                <li key={`${f.name}-${f.size}-${i}`} className="flex items-center justify-between gap-3 rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                  <span className="truncate">{f.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                    className="shrink-0 text-slate-400 hover:text-red-600"
+                    aria-label={`Remove ${f.name}`}
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
+          <p className="mt-2 text-xs text-slate-400">Photos are uploaded after you submit. Max 20 MB each.</p>
         </section>
 
         {error && (
