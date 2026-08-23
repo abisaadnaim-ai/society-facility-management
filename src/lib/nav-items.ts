@@ -41,7 +41,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     label: "Supply",
     items: [
       { label: "Vendors", href: "/vendors", visible: (p) => p.role?.code !== "requester" },
-      { label: "Inventory", href: "/inventory" },
+      { label: "Inventory", href: "/inventory", visible: (p) => p.role?.code !== "requester" },
     ],
   },
   {
@@ -51,6 +51,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { label: "User Management", href: "/settings/users", visible: canManageConfiguration },
       { label: "Asset Categories", href: "/settings/asset-categories", visible: canManageConfiguration },
       { label: "Asset Statuses", href: "/settings/asset-statuses", visible: canManageConfiguration },
+      { label: "Inventory Setup", href: "/inventory/setup", visible: canManageConfiguration },
       { label: "Settings", href: "/settings" },
     ],
   },

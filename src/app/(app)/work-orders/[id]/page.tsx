@@ -16,8 +16,10 @@ import {
   getVendorContactsLite,
   getContractsLite,
 } from "@/lib/queries/vendors";
+import { getWorkOrderParts, getItemOptionsForIssue, getStockLocationOptions } from "@/lib/queries/inventory";
 import { WorkOrderDetailView } from "@/components/facility/work-order-detail-view";
 import { WorkOrderVendorPanel } from "@/components/facility/wo-vendor-panel";
+import { WorkOrderPartsPanel } from "@/components/facility/wo-parts-panel";
 import type { RoleCode } from "@/lib/types/auth";
 
 export default async function WorkOrderDetailPage({
@@ -58,6 +60,18 @@ export default async function WorkOrderDetailPage({
 
   const renderVendorPanel = showVendorPanel && (!!vendorInfo?.vendor || canManageVendor || vendorNotes.length > 0);
 
+  // Parts / Materials (inventory) — visible to all non-requesters; issue/return
+  // for FM/Super Admin or the technician assigned to this work order.
+  const showParts = role !== "requester";
+  const canIssueParts = canManageVendor || (role === "technician" && assignedTo === (user?.id ?? ""));
+  const [woParts, partItemOptions, partStockLocations] = showParts
+    ? await Promise.all([
+        getWorkOrderParts(supabase, id),
+        canIssueParts ? getItemOptionsForIssue(supabase) : Promise.resolve([]),
+        canIssueParts ? getStockLocationOptions(supabase) : Promise.resolve([]),
+      ])
+    : [[], [], []];
+
   let ppmPlan: { id: string; ppm_number: string; name: string } | null = null;
   if (workOrder.source === "ppm" && workOrder.ppm_plan_id) {
     const { data: plan } = await supabase
@@ -94,6 +108,18 @@ export default async function WorkOrderDetailPage({
             contracts={vendorContracts}
             canManage={canManageVendor}
             canWriteNotes={canWriteVendorNotes}
+          />
+        </div>
+      )}
+      {showParts && (
+        <div className="mt-6">
+          <WorkOrderPartsPanel
+            workOrderId={id}
+            parts={woParts}
+            canIssue={canIssueParts}
+            itemOptions={partItemOptions}
+            stockLocations={partStockLocations}
+            technicians={technicians}
           />
         </div>
       )}

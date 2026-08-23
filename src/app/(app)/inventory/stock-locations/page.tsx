@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/queries/get-session-profile";
-import { getInventoryItems, getInventoryCategories, getStockLocationOptions } from "@/lib/queries/inventory";
-import { InventoryView } from "@/components/facility/inventory-view";
+import { getStockLocations } from "@/lib/queries/inventory";
+import { StockLocationsView } from "@/components/facility/stock-locations-view";
 import type { RoleCode } from "@/lib/types/auth";
 
-export default async function InventoryPage() {
+export default async function StockLocationsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const profile = user ? await getSessionProfile(supabase, user.id) : null;
@@ -13,11 +13,6 @@ export default async function InventoryPage() {
   if (role === "requester") redirect("/dashboard");
   const canManage = role === "super_admin" || role === "facility_manager";
 
-  const [items, categories, stockLocations] = await Promise.all([
-    getInventoryItems(supabase),
-    getInventoryCategories(supabase),
-    getStockLocationOptions(supabase),
-  ]);
-
-  return <InventoryView items={items} categories={categories} stockLocations={stockLocations} canManage={canManage} />;
+  const locations = await getStockLocations(supabase);
+  return <StockLocationsView locations={locations} canManage={canManage} />;
 }

@@ -9,6 +9,8 @@ import {
   getExpiringContracts,
   getWorkOrdersWaitingForVendor,
 } from "@/lib/queries/vendors";
+import { getInventoryDashboardMetrics, getLowStockItems } from "@/lib/queries/inventory";
+import { fmtQty } from "@/lib/types/inventory";
 import { formatDate } from "@/lib/format";
 import { DashboardQuickActions } from "@/components/facility/dashboard-quick-actions";
 import { ContractStateBadge } from "@/components/facility/vendor-badges";
@@ -66,6 +68,8 @@ export default async function DashboardPage() {
   const vendorMetrics = role === "requester" ? null : await getVendorDashboardMetrics(supabase);
   const expiringContracts = role === "requester" ? [] : await getExpiringContracts(supabase, 60);
   const waitingVendorWOs = role === "requester" ? [] : await getWorkOrdersWaitingForVendor(supabase);
+  const inventoryMetrics = role === "requester" ? null : await getInventoryDashboardMetrics(supabase);
+  const lowStockItems = role === "requester" ? [] : await getLowStockItems(supabase, 8);
 
   return (
     <div>
@@ -175,6 +179,45 @@ export default async function DashboardPage() {
                 </section>
               )}
             </div>
+          )}
+        </div>
+      )}
+
+      {inventoryMetrics && (
+        <div className="mb-8">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-900">Inventory &amp; Spare Parts</h2>
+            <Link href="/inventory" className="text-sm text-slate-500 hover:text-slate-900">View all</Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatCard label="Total items" value={inventoryMetrics.totalItems} href="/inventory" />
+            <StatCard label="Low stock items" value={inventoryMetrics.lowStockItems} href="/inventory" highlight />
+            <StatCard label="Out of stock" value={inventoryMetrics.outOfStockItems} href="/inventory" highlight />
+            <StatCard label="Issued this month" value={inventoryMetrics.issuedThisMonth} href="/inventory/movements" />
+          </div>
+
+          {lowStockItems.length > 0 && (
+            <section className="mt-4 rounded-lg border border-slate-200 bg-white p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-900">Low Stock Items</h3>
+                <Link href="/inventory" className="text-sm text-slate-500 hover:text-slate-900">View all</Link>
+              </div>
+              <ul className="divide-y divide-slate-100">
+                {lowStockItems.map((i) => (
+                  <li key={i.id}>
+                    <Link href={`/inventory/${i.id}`} className="flex items-center justify-between gap-3 py-2.5 hover:opacity-80">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-slate-900">{i.name}</p>
+                        <p className="text-xs text-slate-500">{i.item_code}</p>
+                      </div>
+                      <p className="shrink-0 text-sm text-slate-600">
+                        {fmtQty(i.total_stock)}{i.minimum_stock_level != null ? ` / min ${fmtQty(i.minimum_stock_level)}` : ""}
+                      </p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
         </div>
       )}
