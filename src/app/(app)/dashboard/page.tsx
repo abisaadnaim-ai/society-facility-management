@@ -4,8 +4,14 @@ import { getSessionProfile } from "@/lib/queries/get-session-profile";
 import { getOperationsDashboard } from "@/lib/queries/operations-dashboard";
 import { getPpmSummary } from "@/lib/queries/ppm";
 import { getInspectionSummary } from "@/lib/queries/inspections";
+import {
+  getVendorDashboardMetrics,
+  getExpiringContracts,
+  getWorkOrdersWaitingForVendor,
+} from "@/lib/queries/vendors";
 import { formatDate } from "@/lib/format";
 import { DashboardQuickActions } from "@/components/facility/dashboard-quick-actions";
+import { ContractStateBadge } from "@/components/facility/vendor-badges";
 import type { RoleCode } from "@/lib/types/auth";
 import {
   RequestStatusBadge,
@@ -57,6 +63,9 @@ export default async function DashboardPage() {
   const ppm = await getPpmSummary(supabase);
   const role = (profile?.role?.code ?? null) as RoleCode | null;
   const inspections = role === "requester" ? null : await getInspectionSummary(supabase);
+  const vendorMetrics = role === "requester" ? null : await getVendorDashboardMetrics(supabase);
+  const expiringContracts = role === "requester" ? [] : await getExpiringContracts(supabase, 60);
+  const waitingVendorWOs = role === "requester" ? [] : await getWorkOrdersWaitingForVendor(supabase);
 
   return (
     <div>
@@ -104,6 +113,69 @@ export default async function DashboardPage() {
             <StatCard label="Failed" value={inspections.failedInspections} href="/inspections" highlight />
             <StatCard label="Open findings" value={inspections.openFindings} href="/inspections/findings" highlight />
           </div>
+        </div>
+      )}
+
+      {vendorMetrics && (
+        <div className="mb-8">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-900">Vendors &amp; Service Contracts</h2>
+            <Link href="/vendors" className="text-sm text-slate-500 hover:text-slate-900">View all</Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <StatCard label="Active vendors" value={vendorMetrics.activeVendors} href="/vendors" />
+            <StatCard label="Active contracts" value={vendorMetrics.activeContracts} href="/vendors/contracts" />
+            <StatCard label="Expiring in 30 days" value={vendorMetrics.expiring30} href="/vendors/contracts" highlight />
+            <StatCard label="Expiring in 60 days" value={vendorMetrics.expiring60} href="/vendors/contracts" />
+            <StatCard label="Expired contracts" value={vendorMetrics.expired} href="/vendors/contracts" highlight />
+            <StatCard label="WOs waiting for vendor" value={vendorMetrics.openWorkOrdersWaitingVendor} href="/work-orders" />
+          </div>
+
+          {(expiringContracts.length > 0 || waitingVendorWOs.length > 0) && (
+            <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {expiringContracts.length > 0 && (
+                <section className="rounded-lg border border-slate-200 bg-white p-5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-slate-900">Contracts Expiring Soon</h3>
+                    <Link href="/vendors/contracts" className="text-sm text-slate-500 hover:text-slate-900">View all</Link>
+                  </div>
+                  <ul className="divide-y divide-slate-100">
+                    {expiringContracts.map((c) => (
+                      <li key={c.id}>
+                        <Link href={`/vendors/contracts/${c.id}`} className="flex items-center justify-between gap-3 py-2.5 hover:opacity-80">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-slate-900">{c.name}</p>
+                            <p className="text-xs text-slate-500">{c.vendor_name} - expires {formatDate(c.end_date)}</p>
+                          </div>
+                          <ContractStateBadge state={c.state} />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+              {waitingVendorWOs.length > 0 && (
+                <section className="rounded-lg border border-slate-200 bg-white p-5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-slate-900">Work Orders Waiting for Vendor</h3>
+                    <Link href="/work-orders" className="text-sm text-slate-500 hover:text-slate-900">View all</Link>
+                  </div>
+                  <ul className="divide-y divide-slate-100">
+                    {waitingVendorWOs.map((w) => (
+                      <li key={w.id}>
+                        <Link href={`/work-orders/${w.id}`} className="flex items-center justify-between gap-3 py-2.5 hover:opacity-80">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-slate-900">{w.title}</p>
+                            <p className="text-xs text-slate-500">{w.work_order_number}{w.vendor_name ? ` - ${w.vendor_name}` : ""}</p>
+                          </div>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </div>
+          )}
         </div>
       )}
 

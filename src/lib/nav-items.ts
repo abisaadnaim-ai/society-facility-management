@@ -40,7 +40,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   {
     label: "Supply",
     items: [
-      { label: "Vendors", href: "/vendors" },
+      { label: "Vendors", href: "/vendors", visible: (p) => p.role?.code !== "requester" },
       { label: "Inventory", href: "/inventory" },
     ],
   },

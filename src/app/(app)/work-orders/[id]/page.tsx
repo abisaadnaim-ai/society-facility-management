@@ -9,7 +9,15 @@ import {
 } from "@/lib/queries/work-orders";
 import { getWorkOrderStatuses, getTechnicianOptions } from "@/lib/queries/fm-config";
 import { getWorkOrderTasks } from "@/lib/queries/ppm";
+import {
+  getWorkOrderVendorInfo,
+  getWorkOrderVendorNotes,
+  getVendorOptions,
+  getVendorContactsLite,
+  getContractsLite,
+} from "@/lib/queries/vendors";
 import { WorkOrderDetailView } from "@/components/facility/work-order-detail-view";
+import { WorkOrderVendorPanel } from "@/components/facility/wo-vendor-panel";
 import type { RoleCode } from "@/lib/types/auth";
 
 export default async function WorkOrderDetailPage({
@@ -37,6 +45,19 @@ export default async function WorkOrderDetailPage({
     getWorkOrderTasks(supabase, id),
   ]);
 
+  const canManageVendor = role === "super_admin" || role === "facility_manager";
+  const assignedTo = (workOrder as unknown as { assigned_to: string | null }).assigned_to;
+  const canWriteVendorNotes = canManageVendor || (role === "technician" && assignedTo === (user?.id ?? ""));
+  const showVendorPanel = role !== "requester";
+
+  const vendorInfo = showVendorPanel ? await getWorkOrderVendorInfo(supabase, id) : null;
+  const vendorNotes = showVendorPanel ? await getWorkOrderVendorNotes(supabase, id) : [];
+  const vendorOptions = showVendorPanel && canManageVendor ? await getVendorOptions(supabase) : [];
+  const vendorContacts = showVendorPanel && canManageVendor ? await getVendorContactsLite(supabase) : [];
+  const vendorContracts = showVendorPanel && canManageVendor ? await getContractsLite(supabase) : [];
+
+  const renderVendorPanel = showVendorPanel && (!!vendorInfo?.vendor || canManageVendor || vendorNotes.length > 0);
+
   let ppmPlan: { id: string; ppm_number: string; name: string } | null = null;
   if (workOrder.source === "ppm" && workOrder.ppm_plan_id) {
     const { data: plan } = await supabase
@@ -48,18 +69,34 @@ export default async function WorkOrderDetailPage({
   }
 
   return (
-    <WorkOrderDetailView
-      workOrder={workOrder}
-      activity={activity}
-      comments={comments}
-      attachments={attachments}
-      role={role}
-      userId={user?.id ?? ""}
-      organizationId={profile?.organization_id ?? ""}
-      statuses={statuses}
-      technicians={technicians}
-      tasks={tasks}
-      ppmPlan={ppmPlan}
-    />
+    <>
+      <WorkOrderDetailView
+        workOrder={workOrder}
+        activity={activity}
+        comments={comments}
+        attachments={attachments}
+        role={role}
+        userId={user?.id ?? ""}
+        organizationId={profile?.organization_id ?? ""}
+        statuses={statuses}
+        technicians={technicians}
+        tasks={tasks}
+        ppmPlan={ppmPlan}
+      />
+      {renderVendorPanel && (
+        <div className="mt-6">
+          <WorkOrderVendorPanel
+            workOrderId={id}
+            info={vendorInfo}
+            notes={vendorNotes}
+            vendors={vendorOptions}
+            contacts={vendorContacts}
+            contracts={vendorContracts}
+            canManage={canManageVendor}
+            canWriteNotes={canWriteVendorNotes}
+          />
+        </div>
+      )}
+    </>
   );
 }

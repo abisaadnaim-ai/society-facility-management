@@ -5,9 +5,11 @@ import { getAssetById, getAssetActivity, getAssetAttachments } from "@/lib/queri
 import { getWorkOrdersForAsset } from "@/lib/queries/work-orders";
 import { getPpmPlansForAsset } from "@/lib/queries/ppm";
 import { getInspectionsForAsset } from "@/lib/queries/inspections";
+import { getVendorCoverageForAsset } from "@/lib/queries/vendors";
 import { canManageFacility } from "@/lib/auth/permissions";
 import { AssetDetailView } from "@/components/facility/asset-detail-view";
 import { AssetInspectionsCard } from "@/components/facility/asset-inspections-card";
+import { VendorCoverageCard } from "@/components/facility/vendor-coverage-card";
 
 export default async function AssetDetailPage({
   params,
@@ -24,12 +26,13 @@ export default async function AssetDetailPage({
   const asset = await getAssetById(supabase, id);
   if (!asset) notFound();
 
-  const [activity, attachments, workOrders, ppmPlans, inspections] = await Promise.all([
+  const [activity, attachments, workOrders, ppmPlans, inspections, vendorCoverage] = await Promise.all([
     getAssetActivity(supabase, id),
     getAssetAttachments(supabase, id),
     getWorkOrdersForAsset(supabase, id),
     getPpmPlansForAsset(supabase, id),
     getInspectionsForAsset(supabase, id),
+    getVendorCoverageForAsset(supabase, id),
   ]);
 
   return (
@@ -44,6 +47,9 @@ export default async function AssetDetailPage({
         organizationId={profile?.organization_id ?? ""}
       />
       <AssetInspectionsCard inspections={inspections} />
+      <div className="mt-6">
+        <VendorCoverageCard coverage={vendorCoverage} />
+      </div>
     </>
   );
 }

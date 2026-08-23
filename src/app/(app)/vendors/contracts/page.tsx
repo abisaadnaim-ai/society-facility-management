@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/queries/get-session-profile";
-import { getVendors, getVendorCategories } from "@/lib/queries/vendors";
+import { getContracts, getVendorOptions } from "@/lib/queries/vendors";
 import { getLocations } from "@/lib/queries/locations";
-import { VendorsView } from "@/components/facility/vendors-view";
+import { ContractsView } from "@/components/facility/contracts-view";
 import type { RoleCode } from "@/lib/types/auth";
 
-export default async function VendorsPage() {
+export default async function ContractsPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -16,11 +16,11 @@ export default async function VendorsPage() {
   if (role === "requester") redirect("/dashboard");
   const canManage = role === "super_admin" || role === "facility_manager";
 
-  const [vendors, categories, locations] = await Promise.all([
-    getVendors(supabase),
-    getVendorCategories(supabase),
+  const [contracts, vendors, locations] = await Promise.all([
+    getContracts(supabase),
+    getVendorOptions(supabase),
     getLocations(supabase, { includeInactive: false }),
   ]);
 
-  return <VendorsView vendors={vendors} categories={categories} locations={locations} canManage={canManage} />;
+  return <ContractsView contracts={contracts} vendors={vendors} locations={locations} canManage={canManage} />;
 }
