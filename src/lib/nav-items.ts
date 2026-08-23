@@ -34,7 +34,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { label: "FM Requests", href: "/fm-requests" },
       { label: "Work Orders", href: "/work-orders" },
       { label: "Preventive Maintenance", href: "/preventive-maintenance" },
-      { label: "Inspections", href: "/inspections" },
+      { label: "Inspections", href: "/inspections", visible: (p) => p.role?.code !== "requester" },
     ],
   },
   {

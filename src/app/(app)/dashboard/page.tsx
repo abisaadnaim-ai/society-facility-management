@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSessionProfile } from "@/lib/queries/get-session-profile";
 import { getOperationsDashboard } from "@/lib/queries/operations-dashboard";
 import { getPpmSummary } from "@/lib/queries/ppm";
+import { getInspectionSummary } from "@/lib/queries/inspections";
 import { formatDate } from "@/lib/format";
 import { DashboardQuickActions } from "@/components/facility/dashboard-quick-actions";
 import type { RoleCode } from "@/lib/types/auth";
@@ -55,6 +56,7 @@ export default async function DashboardPage() {
   const { counts, recentRequests, recentWorkOrders } = await getOperationsDashboard(supabase);
   const ppm = await getPpmSummary(supabase);
   const role = (profile?.role?.code ?? null) as RoleCode | null;
+  const inspections = role === "requester" ? null : await getInspectionSummary(supabase);
 
   return (
     <div>
@@ -87,6 +89,23 @@ export default async function DashboardPage() {
           <StatCard label="Open PPM work orders" value={ppm.openPpmWorkOrders} href="/work-orders" />
         </div>
       </div>
+
+      {inspections && (
+        <div className="mb-8">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-900">Inspections</h2>
+            <Link href="/inspections" className="text-sm text-slate-500 hover:text-slate-900">View all</Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <StatCard label="Due today" value={inspections.dueToday} href="/inspections" />
+            <StatCard label="Overdue" value={inspections.overdue} href="/inspections" highlight />
+            <StatCard label="In progress" value={inspections.inProgress} href="/inspections" />
+            <StatCard label="Awaiting review" value={inspections.awaitingReview} href="/inspections" />
+            <StatCard label="Failed" value={inspections.failedInspections} href="/inspections" highlight />
+            <StatCard label="Open findings" value={inspections.openFindings} href="/inspections/findings" highlight />
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="rounded-lg border border-slate-200 bg-white p-5">
