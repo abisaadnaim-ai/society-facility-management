@@ -32,7 +32,23 @@ export type PersonOption = {
 export type Lookup = { id: string; name: string; code: string | null };
 
 // ---- Composite (joined) types ----
-export type FmRequestRow = FmRequest & {
+// Phase 8 SLA snapshot fields (present at runtime via select "*"; the generated
+// database.ts is not regenerated, so they are declared explicitly here).
+export type FmRequestSlaFields = {
+  response_due_at: string | null;
+  first_responded_at: string | null;
+  response_sla_status: "pending" | "met" | "breached" | "not_applicable";
+  sla_response_target_minutes: number | null;
+};
+export type WorkOrderSlaFields = {
+  resolution_due_at: string | null;
+  resolution_sla_status: "pending" | "met" | "breached" | "not_applicable";
+  breached_at: string | null;
+  escalation_level: number | null;
+  sla_resolution_target_minutes: number | null;
+};
+
+export type FmRequestRow = FmRequest & FmRequestSlaFields & {
   location: NamedRef;
   area: NamedRef;
   category: NamedRef;
@@ -53,7 +69,7 @@ export type FmRequestDetail = FmRequestRow & {
   work_order: LinkedWorkOrder;
 };
 
-export type WorkOrderRow = WorkOrder & {
+export type WorkOrderRow = WorkOrder & WorkOrderSlaFields & {
   location: NamedRef;
   area: NamedRef;
   asset: NamedRef;

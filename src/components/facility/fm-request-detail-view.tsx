@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog } from "@/components/ui/dialog";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatDateTimeQatar, formatMinutes } from "@/lib/format";
 import {
   RequestStatusBadge,
   PriorityBadge,
@@ -16,6 +16,7 @@ import {
   personName,
 } from "@/components/facility/status-badges";
 import { ActivityTimeline } from "@/components/facility/activity-timeline";
+import { ResponseSlaBadge } from "@/components/facility/sla-badges";
 import { CommentThread } from "@/components/facility/comment-thread";
 import { AttachmentsPanel } from "@/components/facility/attachments-panel";
 import { LocationAreaAssetPicker } from "@/components/facility/location-area-asset-picker";
@@ -174,6 +175,26 @@ export function FmRequestDetailView({
               <Field label="Reported" value={formatDateTime(request.created_at)} />
               {request.reviewed_at && (
                 <Field label="Reviewed" value={`${personName(request.reviewer)} - ${formatDateTime(request.reviewed_at)}`} />
+              )}
+              {request.sla_response_target_minutes != null && (
+                <>
+                  <Field label="Response target" value={formatMinutes(request.sla_response_target_minutes)} />
+                  <Field
+                    label="Response due"
+                    value={request.response_due_at ? formatDateTimeQatar(request.response_due_at) : "-"}
+                  />
+                  <Field
+                    label="Response SLA"
+                    value={
+                      <ResponseSlaBadge
+                        targetMinutes={request.sla_response_target_minutes}
+                        createdAt={request.created_at}
+                        responseDueAt={request.response_due_at}
+                        firstRespondedAt={request.first_responded_at}
+                      />
+                    }
+                  />
+                </>
               )}
               {request.rejection_reason && <Field label="Rejection reason" value={request.rejection_reason} />}
               {request.cancellation_reason && <Field label="Cancellation reason" value={request.cancellation_reason} />}

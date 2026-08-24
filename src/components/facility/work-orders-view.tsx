@@ -15,6 +15,8 @@ import {
   PriorityBadge,
   personName,
 } from "@/components/facility/status-badges";
+import { ResolutionSlaBadge, EscalatedBadge } from "@/components/facility/sla-badges";
+import { liveSlaStatus } from "@/lib/types/notifications";
 import type {
   WorkOrderRow,
   FmCategory,
@@ -54,6 +56,7 @@ export function WorkOrdersView({
   const [statusId, setStatusId] = useState("");
   const [technicianId, setTechnicianId] = useState("");
   const [mineOnly, setMineOnly] = useState(isTechnician);
+  const [slaFilter, setSlaFilter] = useState("");
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -64,13 +67,30 @@ export function WorkOrdersView({
       if (priorityId && w.priority_id !== priorityId) return false;
       if (statusId && w.status_id !== statusId) return false;
       if (technicianId && w.assigned_to !== technicianId) return false;
+      if (slaFilter) {
+        if (slaFilter === "escalated") {
+          if ((w.escalation_level ?? 0) < 1) return false;
+        } else if (slaFilter === "critical") {
+          if (w.priority?.code !== "critical") return false;
+        } else {
+          const st = liveSlaStatus({
+            targetMinutes: w.sla_resolution_target_minutes,
+            start: w.created_at,
+            due: w.resolution_due_at,
+            done: w.closed_at,
+            cancelled: w.status?.code === "cancelled",
+          });
+          if (slaFilter === "overdue" && st !== "overdue" && st !== "breached") return false;
+          if (slaFilter === "due_soon" && st !== "due_soon") return false;
+        }
+      }
       if (q) {
         const hay = `${w.work_order_number} ${w.title} ${w.description ?? ""} ${w.asset?.name ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [workOrders, mineOnly, currentUserId, search, locationId, categoryId, priorityId, statusId, technicianId]);
+  }, [workOrders, mineOnly, currentUserId, search, locationId, categoryId, priorityId, statusId, technicianId, slaFilter]);
 
   return (
     <div>
@@ -123,6 +143,13 @@ export function WorkOrdersView({
           <option value="">All technicians</option>
           {technicians.map((t) => <option key={t.id} value={t.id}>{personName(t)}</option>)}
         </Select>
+        <Select value={slaFilter} onChange={(e) => setSlaFilter(e.target.value)} className="sm:w-40">
+          <option value="">All SLA</option>
+          <option value="overdue">Overdue</option>
+          <option value="due_soon">Due soon</option>
+          <option value="escalated">Escalated</option>
+          <option value="critical">Critical</option>
+        </Select>
       </FilterContainer>
 
       {filtered.length === 0 ? (
@@ -146,6 +173,7 @@ export function WorkOrdersView({
                   <th className="px-4 py-3 font-medium">Asset</th>
                   <th className="px-4 py-3 font-medium">Priority</th>
                   <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Resolution SLA</th>
                   <th className="px-4 py-3 font-medium">Technician</th>
                   <th className="px-4 py-3 font-medium">Due</th>
                 </tr>
@@ -168,6 +196,18 @@ export function WorkOrdersView({
                     <td className="px-4 py-3 text-slate-600">{w.asset?.name ?? "-"}</td>
                     <td className="px-4 py-3"><PriorityBadge priority={w.priority} /></td>
                     <td className="px-4 py-3"><WorkOrderStatusBadge status={w.status} /></td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap items-center gap-1">
+                        <ResolutionSlaBadge
+                          targetMinutes={w.sla_resolution_target_minutes}
+                          createdAt={w.created_at}
+                          resolutionDueAt={w.resolution_due_at}
+                          closedAt={w.closed_at}
+                          cancelled={w.status?.code === "cancelled"}
+                        />
+                        <EscalatedBadge level={w.escalation_level} />
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-slate-600">{w.assignee ? personName(w.assignee) : "Unassigned"}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-slate-500">{w.due_date ? formatDate(w.due_date) : "-"}</td>
                   </tr>
@@ -195,6 +235,14 @@ export function WorkOrdersView({
                 <p className="mb-2 text-sm text-slate-700">{w.title}</p>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                   <PriorityBadge priority={w.priority} />
+                  <ResolutionSlaBadge
+                    targetMinutes={w.sla_resolution_target_minutes}
+                    createdAt={w.created_at}
+                    resolutionDueAt={w.resolution_due_at}
+                    closedAt={w.closed_at}
+                    cancelled={w.status?.code === "cancelled"}
+                  />
+                  <EscalatedBadge level={w.escalation_level} />
                   <span>{w.location?.name ?? "-"}</span>
                   {w.asset?.name && <span>- {w.asset.name}</span>}
                   <span>- {w.assignee ? personName(w.assignee) : "Unassigned"}</span>

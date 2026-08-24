@@ -10,10 +10,15 @@ import {
   getWorkOrdersWaitingForVendor,
 } from "@/lib/queries/vendors";
 import { getInventoryDashboardMetrics, getLowStockItems } from "@/lib/queries/inventory";
+import { getSlaDashboard } from "@/lib/queries/sla-dashboard";
+import { getRecentNotifications } from "@/lib/queries/notifications";
 import { fmtQty } from "@/lib/types/inventory";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatRelativeTime } from "@/lib/format";
 import { DashboardQuickActions } from "@/components/facility/dashboard-quick-actions";
 import { ContractStateBadge } from "@/components/facility/vendor-badges";
+import { SlaBadge, EscalatedBadge } from "@/components/facility/sla-badges";
+import { Badge } from "@/components/ui/badge";
+import { notificationPriorityVariant } from "@/lib/types/notifications";
 import type { RoleCode } from "@/lib/types/auth";
 import {
   RequestStatusBadge,
@@ -71,6 +76,10 @@ export default async function DashboardPage() {
   const inventoryMetrics = role === "requester" ? null : await getInventoryDashboardMetrics(supabase);
   const lowStockItems = role === "requester" ? [] : await getLowStockItems(supabase, 8);
 
+  // Phase 8 — operational SLA picture + this user's recent alerts.
+  const sla = role === "requester" ? null : await getSlaDashboard(supabase);
+  const recentAlerts = profile ? await getRecentNotifications(supabase, profile.id, 6) : [];
+
   return (
     <div>
       <div className="mb-6">
@@ -79,6 +88,95 @@ export default async function DashboardPage() {
       </div>
 
       <DashboardQuickActions role={role} counts={counts} ppm={ppm} />
+
+      {sla && (
+        <div className="mb-8">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-900">SLA &amp; Escalations</h2>
+            <Link href="/notifications" className="text-sm text-slate-500 hover:text-slate-900">Notifications</Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <StatCard label="Critical open" value={sla.counts.criticalOpen} href="/work-orders" highlight />
+            <StatCard label="SLA breached" value={sla.counts.slaBreached} href="/work-orders" highlight />
+            <StatCard label="Due soon" value={sla.counts.dueSoon} href="/work-orders" />
+            <StatCard label="Escalated" value={sla.counts.escalated} href="/work-orders" highlight />
+            <StatCard label="Awaiting verification" value={sla.counts.awaitingVerification} href="/work-orders" />
+            <StatCard label="Unassigned" value={sla.counts.unassigned} href="/work-orders" />
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <section className="rounded-lg border border-slate-200 bg-white p-5">
+              <h3 className="mb-3 text-sm font-semibold text-slate-900">Needs Attention</h3>
+              {sla.needsAttention.length === 0 ? (
+                <p className="text-sm text-slate-500">Nothing needs attention right now.</p>
+              ) : (
+                <ul className="divide-y divide-slate-100">
+                  {sla.needsAttention.map((it) => (
+                    <li key={`${it.entityType}:${it.id}`}>
+                      <Link
+                        href={`${it.entityType === "work_order" ? "/work-orders" : "/fm-requests"}/${it.id}`}
+                        className="flex items-center justify-between gap-3 py-2.5 hover:opacity-80"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-slate-900">{it.title}</p>
+                          <p className="text-xs text-slate-500">
+                            {it.number} - {it.entityType === "work_order" ? "Work Order" : "FM Request"}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1">
+                          {it.priorityCode === "critical" && <Badge variant="danger">Critical</Badge>}
+                          <SlaBadge status={it.liveStatus} />
+                          {it.escalated && <EscalatedBadge level={1} />}
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section className="rounded-lg border border-slate-200 bg-white p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-900">Recent Alerts</h3>
+                <Link href="/notifications" className="text-sm text-slate-500 hover:text-slate-900">View all</Link>
+              </div>
+              {recentAlerts.length === 0 ? (
+                <p className="text-sm text-slate-500">No recent alerts.</p>
+              ) : (
+                <ul className="divide-y divide-slate-100">
+                  {recentAlerts.map((n) => {
+                    const inner = (
+                      <div className="flex items-center justify-between gap-3 py-2.5">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-slate-900">{n.title}</p>
+                          {n.message && <p className="truncate text-xs text-slate-500">{n.message}</p>}
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          {n.priority !== "normal" && (
+                            <Badge variant={notificationPriorityVariant(n.priority)}>
+                              {n.priority === "critical" ? "Critical" : "High"}
+                            </Badge>
+                          )}
+                          <span className="text-xs text-slate-400">{formatRelativeTime(n.created_at)}</span>
+                        </div>
+                      </div>
+                    );
+                    return (
+                      <li key={n.id}>
+                        {n.link_url ? (
+                          <Link href={n.link_url} className="block hover:opacity-80">{inner}</Link>
+                        ) : (
+                          inner
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+          </div>
+        </div>
+      )}
 
       <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         <StatCard label="New requests" value={counts.newRequests} href="/fm-requests" />

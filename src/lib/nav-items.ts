@@ -52,6 +52,11 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { label: "Asset Categories", href: "/settings/asset-categories", visible: canManageConfiguration },
       { label: "Asset Statuses", href: "/settings/asset-statuses", visible: canManageConfiguration },
       { label: "Inventory Setup", href: "/inventory/setup", visible: canManageConfiguration },
+      {
+        label: "SLA Rules",
+        href: "/settings/sla-rules",
+        visible: (p) => p.role?.code === "super_admin" || p.role?.code === "facility_manager",
+      },
       { label: "Settings", href: "/settings" },
     ],
   },

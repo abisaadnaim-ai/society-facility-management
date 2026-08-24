@@ -17,7 +17,9 @@ import {
   getContractsLite,
 } from "@/lib/queries/vendors";
 import { getWorkOrderParts, getItemOptionsForIssue, getStockLocationOptions } from "@/lib/queries/inventory";
+import { getEntityEscalations } from "@/lib/queries/notifications";
 import { WorkOrderDetailView } from "@/components/facility/work-order-detail-view";
+import { WorkOrderSlaPanel } from "@/components/facility/wo-sla-panel";
 import { WorkOrderVendorPanel } from "@/components/facility/wo-vendor-panel";
 import { WorkOrderPartsPanel } from "@/components/facility/wo-parts-panel";
 import type { RoleCode } from "@/lib/types/auth";
@@ -82,6 +84,10 @@ export default async function WorkOrderDetailPage({
     ppmPlan = (plan as unknown as { id: string; ppm_number: string; name: string }) ?? null;
   }
 
+  // SLA / escalation (RLS returns escalations only to FM/SA; others get []).
+  const woEscalations = await getEntityEscalations(supabase, "work_order", id);
+  const canAcknowledge = role === "super_admin" || role === "facility_manager";
+
   return (
     <>
       <WorkOrderDetailView
@@ -97,6 +103,22 @@ export default async function WorkOrderDetailPage({
         tasks={tasks}
         ppmPlan={ppmPlan}
       />
+      <div className="mt-6">
+        <WorkOrderSlaPanel
+          wo={{
+            priorityName: workOrder.priority?.name ?? null,
+            createdAt: workOrder.created_at,
+            resolutionDueAt: workOrder.resolution_due_at,
+            resolutionTargetMinutes: workOrder.sla_resolution_target_minutes,
+            closedAt: workOrder.closed_at,
+            cancelled: workOrder.status?.code === "cancelled",
+            escalationLevel: workOrder.escalation_level,
+            manualDueDate: workOrder.due_date,
+          }}
+          escalations={woEscalations}
+          canAcknowledge={canAcknowledge}
+        />
+      </div>
       {renderVendorPanel && (
         <div className="mt-6">
           <WorkOrderVendorPanel

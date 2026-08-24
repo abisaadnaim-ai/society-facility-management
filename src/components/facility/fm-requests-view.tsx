@@ -16,6 +16,8 @@ import {
   PriorityBadge,
   personName,
 } from "@/components/facility/status-badges";
+import { ResponseSlaBadge } from "@/components/facility/sla-badges";
+import { liveSlaStatus } from "@/lib/types/notifications";
 import type {
   FmRequestRow,
   FmCategory,
@@ -50,6 +52,7 @@ export function FmRequestsView({
   const [priorityId, setPriorityId] = useState("");
   const [statusId, setStatusId] = useState("");
   const [requesterId, setRequesterId] = useState("");
+  const [slaFilter, setSlaFilter] = useState("");
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -59,13 +62,28 @@ export function FmRequestsView({
       if (priorityId && r.priority_id !== priorityId) return false;
       if (statusId && r.status_id !== statusId) return false;
       if (requesterId && r.requested_by !== requesterId) return false;
+      if (slaFilter) {
+        if (slaFilter === "unreviewed") {
+          if (r.first_responded_at) return false;
+        } else {
+          const st = liveSlaStatus({
+            targetMinutes: r.sla_response_target_minutes,
+            start: r.created_at,
+            due: r.response_due_at,
+            done: r.first_responded_at,
+            cancelled: false,
+          });
+          if (slaFilter === "breached" && st !== "overdue" && st !== "breached") return false;
+          if (slaFilter === "due_soon" && st !== "due_soon") return false;
+        }
+      }
       if (q) {
         const hay = `${r.request_number} ${r.title} ${r.description ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [requests, search, locationId, categoryId, priorityId, statusId, requesterId]);
+  }, [requests, search, locationId, categoryId, priorityId, statusId, requesterId, slaFilter]);
 
   return (
     <div>
@@ -119,6 +137,12 @@ export function FmRequestsView({
             <option key={p.id} value={p.id}>{personName(p)}</option>
           ))}
         </Select>
+        <Select value={slaFilter} onChange={(e) => setSlaFilter(e.target.value)} className="sm:w-40">
+          <option value="">All SLA</option>
+          <option value="breached">SLA breached</option>
+          <option value="due_soon">Due soon</option>
+          <option value="unreviewed">Unreviewed</option>
+        </Select>
       </FilterContainer>
 
       {filtered.length === 0 ? (
@@ -143,6 +167,7 @@ export function FmRequestsView({
                   <th className="px-4 py-3 font-medium">Category</th>
                   <th className="px-4 py-3 font-medium">Priority</th>
                   <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Response SLA</th>
                   <th className="px-4 py-3 font-medium">Requested by</th>
                   <th className="px-4 py-3 font-medium">Age</th>
                 </tr>
@@ -163,6 +188,14 @@ export function FmRequestsView({
                     <td className="px-4 py-3 text-slate-600">{r.category?.name ?? "-"}</td>
                     <td className="px-4 py-3"><PriorityBadge priority={r.priority} /></td>
                     <td className="px-4 py-3"><RequestStatusBadge status={r.status} /></td>
+                    <td className="px-4 py-3">
+                      <ResponseSlaBadge
+                        targetMinutes={r.sla_response_target_minutes}
+                        createdAt={r.created_at}
+                        responseDueAt={r.response_due_at}
+                        firstRespondedAt={r.first_responded_at}
+                      />
+                    </td>
                     <td className="px-4 py-3 text-slate-600">{personName(r.requester)}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-slate-500">{ageLabel(r.created_at)}</td>
                   </tr>
@@ -186,6 +219,12 @@ export function FmRequestsView({
                 <p className="mb-2 text-sm text-slate-700">{r.title}</p>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                   <PriorityBadge priority={r.priority} />
+                  <ResponseSlaBadge
+                    targetMinutes={r.sla_response_target_minutes}
+                    createdAt={r.created_at}
+                    responseDueAt={r.response_due_at}
+                    firstRespondedAt={r.first_responded_at}
+                  />
                   <span>{r.location?.name ?? "-"}</span>
                   <span>- {r.category?.name ?? "-"}</span>
                   <span>- {formatDate(r.created_at)}</span>
