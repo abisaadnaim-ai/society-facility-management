@@ -1,5 +1,5 @@
 import type { SessionProfile } from "@/lib/types/auth";
-import { canManageConfiguration } from "@/lib/auth/permissions";
+import { canManageConfiguration, canViewReports } from "@/lib/auth/permissions";
 
 export type NavItem = {
   label: string;
@@ -47,7 +47,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   {
     label: "Insights & Config",
     items: [
-      { label: "Reports", href: "/reports" },
+      { label: "Reports", href: "/reports", visible: canViewReports },
       { label: "User Management", href: "/settings/users", visible: canManageConfiguration },
       { label: "Asset Categories", href: "/settings/asset-categories", visible: canManageConfiguration },
       { label: "Asset Statuses", href: "/settings/asset-statuses", visible: canManageConfiguration },

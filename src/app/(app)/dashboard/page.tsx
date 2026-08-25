@@ -20,6 +20,7 @@ import { SlaBadge, EscalatedBadge } from "@/components/facility/sla-badges";
 import { Badge } from "@/components/ui/badge";
 import { notificationPriorityVariant } from "@/lib/types/notifications";
 import type { RoleCode } from "@/lib/types/auth";
+import { canViewReports } from "@/lib/auth/permissions";
 import {
   RequestStatusBadge,
   WorkOrderStatusBadge,
@@ -82,9 +83,19 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <p className="text-sm font-medium text-slate-500">Facility Operations</p>
-        <h1 className="mt-1 text-2xl font-semibold text-slate-900">Welcome, {firstName}</h1>
+      <div className="mb-6 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium text-slate-500">Facility Operations</p>
+          <h1 className="mt-1 text-2xl font-semibold text-slate-900">Welcome, {firstName}</h1>
+        </div>
+        {canViewReports(profile) && (
+          <Link
+            href="/reports"
+            className="shrink-0 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Management Overview
+          </Link>
+        )}
       </div>
 
       <DashboardQuickActions role={role} counts={counts} ppm={ppm} />

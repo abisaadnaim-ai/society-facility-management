@@ -46,3 +46,13 @@ export function canManageConfiguration(profile: SessionProfile | null): boolean 
 export function isReadOnlyUser(profile: SessionProfile | null): boolean {
   return !canManageFacility(profile);
 }
+
+/**
+ * Management reporting access (spec §32). Super Admin and Facility Manager get
+ * full reporting; Viewer gets read-only management reporting. Technicians and
+ * Requesters are excluded from the management analytics surface. UI convenience
+ * only — the real boundary is RLS on the underlying tables/RPCs.
+ */
+export function canViewReports(profile: SessionProfile | null): boolean {
+  return hasRole(profile, "super_admin", "facility_manager", "viewer");
+}
