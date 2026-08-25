@@ -24,16 +24,16 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     label: null,
     items: [
       { label: "Dashboard", href: "/dashboard" },
-      { label: "Assets", href: "/assets" },
-      { label: "Locations", href: "/locations" },
+      { label: "Assets", href: "/assets", visible: (p) => p.role?.code !== "requester" },
+      { label: "Locations", href: "/locations", visible: (p) => p.role?.code !== "requester" },
     ],
   },
   {
     label: "Operations",
     items: [
       { label: "FM Requests", href: "/fm-requests" },
-      { label: "Work Orders", href: "/work-orders" },
-      { label: "Preventive Maintenance", href: "/preventive-maintenance" },
+      { label: "Work Orders", href: "/work-orders", visible: (p) => p.role?.code !== "requester" },
+      { label: "Preventive Maintenance", href: "/preventive-maintenance", visible: (p) => p.role?.code !== "requester" },
       { label: "Inspections", href: "/inspections", visible: (p) => p.role?.code !== "requester" },
     ],
   },

@@ -212,11 +212,11 @@ export async function createUserWithPassword(
     admin = createAdminClient();
   } catch {
     // Do not log the password or key. Only a generic server-side note.
-    logActionError("createUserWithPassword", { message: "SUPABASE_SERVICE_ROLE_KEY is not configured." });
+    logActionError("createUserWithPassword", { message: "Server secret key is not configured (SUPABASE_SECRET_KEY)." });
     return {
       ok: false,
       error:
-        "User creation is not configured on the server yet. Add the SUPABASE_SERVICE_ROLE_KEY environment variable in the deployment settings and try again.",
+        "User creation is not configured on the server yet. Add the SUPABASE_SECRET_KEY environment variable (server-side) in the deployment settings and try again.",
     };
   }
 
